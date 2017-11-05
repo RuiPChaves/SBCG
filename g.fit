@@ -1,0 +1,305 @@
+% ==============================================================
+%
+% 	Description:  An implementation of SBCG using ProFIT
+% 	Author: Rui P. Chaves (rchaves@buffalo.edu)
+% 	System:  ProFIT under SICStus (3.8 or higher)
+% 	To load interpreter:     ?- ['profit.pl'].
+% 	To compile grammar: ?- fit 'grammar.fit'.
+%     To parse input:           ?- parse([mia,sneezed], Output).
+%
+% ==============================================================
+
+
+
+% ==============================================================
+%  TYPE HIERARCHY & Attribute-Value SIGNATURE
+% ==============================================================
+
+top > [sign, form, syn, cat, pos, vform, bool, case, frame,predicator, index].           
+ sign > [word, phrase] intro [form: form,syn:syn, frames, arg_st, dtrs].
+ form > [lex_phon,phr_phon].
+	lex_phon > [] intro [phon,prefix,stem,suffix].
+	phr_phon > [] intro [phon].
+ syn > [overt, pro] intro [cat:pos, val, gap].
+	overt > [local,gap].
+ pos > [noun, verb].
+	verb > [] intro [vform : vform, inv : bool].
+	noun > [] intro [case: case].
+  vform > [fin,nfin].
+		nfin > [inf, pass_participle].
+  bool > [minus, plus].
+  case > [nom,acc].
+  frame > [action_pred_fr, tense_fr, name_fr] intro [pred: predicator, index: index].
+	action_pred_fr > [intran_pred_fr, action_process_fr, action_result_fr] intro 
+	[actor: i_index, time: i_index, location: i_index, path: i_index, manner: s_index, reason: s_index].
+		action_process_fr > [] intro [theme: i_index].
+		action_result_fr > [] intro [theme: i_index, state: s_index].
+	tense_fr > [] intro [arg: index].
+   index > [i_index, s_index].
+   predicator > [sneeze, introduce, past, pres, mia].
+
+
+
+% ==============================================================
+%  THE LEXICAL ITEM CONSTRUCTION CLUSTER (lex_cx/1)
+%
+%  Nouns and verbs are mixed here for simplification, but in reality should be
+%  clustered according to their morphosyntactic class.
+%
+% ==============================================================
+
+lex_cx( <word & 
+                  form !(stem! [mia]) &
+		   syn ! (cat ! <noun) &
+		   frames ! [ (<name_fr & 
+				    pred! <mia &
+				    index! <i_index) ] &
+		  dtrs! [] ).
+
+
+lex_cx( <word & 
+                  form !(stem! [introduce]) &
+		   syn ! (cat ! (<verb & inv! <minus) ) &
+		   frames ! [ (<action_pred_fr & 
+				    pred! <introduce &
+				    index! <s_index) | _ ] &
+		  dtrs! []).
+
+lex_cx( <word & 
+                  (form !(stem! [sneeze]) &
+		   syn ! (cat ! (<verb & inv! <minus) ) &
+		   frames ! [ (<action_pred_fr & 
+					pred! <sneeze &
+				    index! <s_index) | _ ]) & 
+		  dtrs! []). 
+
+
+
+
+% ==============================================================
+%  THE INFLECTIONAL CONSTRUCTION CLUSTER (infl_cx/1)
+% ==============================================================
+
+infl_cx( <word & 
+                  form !(prefix! [] &
+	                     suffix! [d]) &
+		   syn ! (cat ! (<verb & vform ! <fin) ) &
+		   frames ! [ (<action_pred_fr & index! E),
+                                  (<tense_fr & pred! <past & arg! E) ] ).
+
+infl_cx( <word & 
+                  form !(prefix! [] &
+		             suffix! [s]) &
+		   syn ! (cat ! (<verb & vform ! <fin) ) &
+		   frames ! [ (<action_pred_fr & index! E),
+                                  (<tense_fr & pred! <pres & arg! E)  ] ).
+
+infl_cx( <word & 
+                  form !(prefix! [] &
+			     suffix! []) &
+		   syn ! (cat ! (<verb & vform ! <nfin) ) &
+		   frames ! [ _ ] ).
+
+infl_cx( <word & 
+		   form ! (prefix ! [] &
+			       suffix ! [d]) &	
+		   syn! (cat! (<verb & vform ! <pass_participle) ) &
+                  frames ! [ _ ] &
+		   arg_st! [ (<sign & syn! (<pro & val! [])) | _ ]).
+
+
+% The rule immediately should be discarded once the oversimplification mentioned 
+% above is undone (i.e. lexemes are clustered according to their morphosyntactic class).
+
+infl_cx( <word & 
+                  form !(prefix! [] &
+			     suffix! []) &
+		   syn ! (cat ! <noun ) &
+		   frames ! [ _ ] ).
+
+% ==============================================================
+%  THE LINKING CONSTRUCTION CLUSTER (link_cx/1)
+% ==============================================================
+
+link_cx( <word & 
+                  syn! (cat! (<verb & inv! <minus)) &
+		  frames! [<action_result_fr &
+				(actor !    X &
+				theme!   Y &
+				state!     S &
+				time!	      T &
+				location! K &
+				path!      P &
+				manner! M &
+				reason!  R) | _] &
+  		  arg_st! [@xp(<noun,X), @xp(<noun,Y), @xp(_,S), @xp(_,T), @xp(_,K), @xp(_,P), @xp(_,M), @xp(_,R)] ).
+
+
+link_cx( <word & 
+                  syn! (cat! (<verb & inv! <minus)) &
+		  frames! [<intran_pred_fr &
+				(actor !    X &
+				time!	      T &
+				location! K &
+				path!      P &
+				manner! M &
+				reason!  R) | _] &
+  		  arg_st! [@xp(<noun,X), @xp(_,T), @xp(_,K), @xp(_,P), @xp(_,M), @xp(_,R)] ).
+
+
+link_cx( <word & 
+                  syn! (cat! <noun) &
+		  frames! [<name_fr] &
+  		  arg_st! [ ] ).
+
+
+
+%  Abbreviation definition:
+
+xp(POS, Variable) := <sign & (syn! (cat! POS & 
+   							  val! [ ]) &
+			   	  	  	 frames! [(<frame & index! Variable) | _ ]).
+
+
+
+% ==============================================================
+%  THE VOICE CONSTRUCTION CLUSTER (voice_cx/1)
+% ==============================================================
+
+voice_cx( <word & 
+		   syn! (cat! (<verb & vform ! <pass_participle) ) &
+		   arg_st! [ (<sign & syn! (<pro & val! [])) | _ ]).
+
+
+voice_cx( <word & 
+		   syn! (cat! (<verb & vform ! <fin) ) &
+		   arg_st! [ (<sign & syn! (<overt & val! [])) | _ ]).
+
+% The rule immediately should be discarded once the oversimplification mentioned 
+% above is undone (i.e. lexemes are clustered according to their morphosyntactic class).
+
+voice_cx( <word & 
+		   syn! cat! <noun).
+
+
+% ==============================================================
+%  THE LEXICAL PHONOLOGY CONSTRUCTION CLUSTER (phon_cx)
+% ==============================================================
+
+phon_cx( <word & 
+                  form !(<lex_phon &		
+			           phon! [P] &		
+			           prefix! B &
+				   stem! C &
+				   suffix! D) ) :- 
+						append(B,C,T), 
+						append(T,D,A),
+						turn_to_atoms(A,P).
+
+% Fuse lists of atoms into an atom (so that user does not need to explicitly identify bound morphemes)
+
+turn_to_atoms([F],F).
+turn_to_atoms([X,Y|L],F):-
+	atom_concat(X,Y,Z),
+	turn_to_atoms([Z|L],F).
+
+
+% ==============================================================
+%  THE VALENCE CONSTRUCTION CLUSTER (val_cx/1)
+% ==============================================================
+
+val_cx( <word & 
+                 syn! (val ! ValenceList &
+			  gap! GapList) &
+		arg_st! ArgStrList ) :-
+						shuffle(ValenceList,TempList,ArgStrList),
+						shuffle(GapList,NullList,TempList),
+						member_type(<local,ValenceList),
+						member_type(<gap,GapList),
+						member_type(<pro,NullList).
+
+shuffle([],[],[]).
+shuffle([X|L1],L2,[X|L3]):- shuffle(L1,L2,L3).
+shuffle(L1,[X|L2],[X|L3]):- shuffle(L1,L2,L3).
+
+member_type(_,[]).
+member_type(T,[(<sign & syn! T) | List]) :- member_type(T, List).
+
+
+
+% ==============================================================
+%
+% A word is the unification of constructions from each of the lexical clusters
+%
+% ==============================================================
+
+word(X) :- 
+	lex_cx(X), 
+	infl_cx(X), 
+	link_cx(X), 
+	voice_cx(X), 
+	phon_cx(X), 
+	val_cx(X).
+
+
+% ==============================================================
+%  THE SUBJECT-PREDICATE CONSTRUCTION 
+% ==============================================================
+
+complex_cx(<phrase &
+		     form! (<phr_phon &
+				   phon ! P3) &
+		      syn ! (cat!  Cat &
+				val! [] &
+				gap! G3) &
+		      frames ! F3 &
+		      dtrs ! [     X & (form! (phon! P1) &
+					     syn! (gap! G1) &
+					     frames! F1),
+				     (form! (phon! P2) &
+             			      syn! (cat! Cat &
+						val! [X] &
+						gap! G2) &
+				      frames! F2) ] ):- 
+								append(P1,P2,P3),
+								append(G1,G2,G3),
+								append(F1,F2,F3).
+			   	
+
+
+
+% ==============================================================
+% PARSER (any off-the shelf parser will do; below is the classic Left-Corner Parser)
+%
+% parse([mia,sneezed], -AVM).
+%
+% ==============================================================
+
+parse(Input, X & (syn! (cat! (<verb & 
+					      vform! <fin) &
+				     val! [] &
+				     gap! []) )) :- 
+	parse_lc(X,Input,[]).
+
+parse_lc(Phrase) --> 
+	leaf_node(Node), 
+        left_corner(Node,Phrase).
+
+leaf_node(AVM) --> 
+	[Word], 
+	{word(AVM & form! phon! [Word])}.
+
+left_corner(Phrase,Phrase) --> 
+	[].
+
+left_corner(SubPhrase,SuperPhrase) --> 
+	{complex_cx(Phrase & <phrase & dtrs! [SubPhrase|Rest])},
+         parse_rest(Rest),         
+         left_corner(Phrase,SuperPhrase).   
+
+parse_rest([]) --> 
+	[].
+
+parse_rest([Phrase|Rest]) --> 
+	parse_lc(Phrase), 
+        parse_rest(Rest). 
