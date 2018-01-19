@@ -1,12 +1,12 @@
 # SBCG
 CxG implementation
 
-This is a proof-of-concept implementation of a small fragment of an English Sign-Based Construction Grammar, adapted to adhere to classic
+This is a proof-of-concept implementation of a very small fragment of an English Sign-Based Construction Grammar, adapted to adhere to classic
 CxG assumptions. The grammar is implemented in ProFIT, a Prolog extension with Features, Inheritance, and Templates originally developed 
 by Gregor Erbach (Universitaet des Saarlandes) in 1994. The present version of ProFIT has been ported to modern SICStus Prolog (3.8 or higher) by Mats Carlson. None of these individuals have any knowledge of the present project or share any of the blame for any of
 its shortcomings.
 
-The grammar file "g.fit" was written by Rui P. Chaves (rchaves@buffalo.edu) at the University at Buffalo, SUNY. After loading SICSStus, the interpreter must be loaded:
+The grammar file "g.fit" was written by Rui P. Chaves (rchaves@buffalo.edu) at the University at Buffalo, SUNY. After loading SICStus, the interpreter must be loaded:
 
 ?- ['profit.pl'].
 
