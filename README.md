@@ -19,8 +19,6 @@ And finally, sentences can be parsed, for example:
 ?- parse([mia,sneezed], Output).
 
 In which case the variable "Output" will be instantiated with a valid AVM describing the phonology, morphosyntax and semantics of the
-clause. Because pragmatics is not implemented, a very large number of parses are allowed, each corresponding to interpretations where 
+clause. Because pragmatics is not implemented, a very large number of solutions are allowed, each corresponding to interpretations where 
 arguments are semantically understood, but not syntactically realized. For example, "Mia laughed" can be interpreted as "Mia laughed the
-kids off the stage" or "Mia laughed a hearty laugh" given that any arguments are allowed to be optional. A principled syntax-pragmatics
-interface theory is necessary to determine when null arguments are licensed, and when they are not. The current implementation allows null
-objects without restriction in order to illustrate how clusters of construction can yield the full range of constructional variants. 
+kids off the stage" or "Mia laughed a hearty laugh" given that (in the present grammar) any arguments are allowed to be optional. A principled syntax-pragmatics interface theory (i.e. "Argument Realization Principle") is necessary to determine when null arguments are licensed, and when they are not. The current implementation allows null objects without restriction in order to illustrate how clusters of construction can yield the full range of constructional variants. 
