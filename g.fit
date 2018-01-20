@@ -175,8 +175,8 @@ voice_cx( <word &
 		   syn! (cat! (<verb & vform ! <fin) ) &
 		   arg_st! [ (<sign & syn! (<overt & val! [])) | _ ]).
 
-% The rule immediately should be discarded once the oversimplification mentioned 
-% above is undone (i.e. lexemes are clustered according to their morphosyntactic class).
+% The rule immediately below should be discarded once the oversimplification mentioned above is undone 
+% (i.e. lexemes are ideally clustered according to their morphosyntactic class, rather than lumped in the same cluster).
 
 voice_cx( <word & 
 		   syn! cat! <noun).
@@ -196,7 +196,8 @@ phon_cx( <word &
 						append(T,D,A),
 						turn_to_atoms(A,P).
 
-% Fuse lists of atoms into an atom (so that user does not need to explicitly identify bound morphemes)
+% The turn_to_atoms/2 predicate is for exposition purposes only. It fuses lists of atoms into an atom
+% (so that user does not need to explicitly identify bound morphemes in the parse input)
 
 turn_to_atoms([F],F).
 turn_to_atoms([X,Y|L],F):-
@@ -230,6 +231,7 @@ member_type(T,[(<sign & syn! T) | List]) :- member_type(T, List).
 % ==============================================================
 %
 % A word is the unification of constructions from each of the lexical clusters
+% As before, different POS should be associated with different clusters.
 %
 % ==============================================================
 
